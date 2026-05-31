@@ -1,4 +1,21 @@
-<!DOCTYPE html>
+"""MarkItDown web wrapper — a single ASGI app for Vercel's Python runtime.
+
+GET  /            -> upload page
+POST /api/convert -> raw file bytes (with X-Filename header) -> Markdown JSON
+"""
+
+import io
+import os
+
+from starlette.applications import Starlette
+from starlette.responses import HTMLResponse, JSONResponse
+from starlette.routing import Route
+
+from markitdown import MarkItDown, StreamInfo
+
+_md = MarkItDown(enable_plugins=False)
+
+PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -9,8 +26,7 @@
   * { box-sizing: border-box; }
   body {
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    margin: 0; padding: 2rem; max-width: 860px; margin-inline: auto;
-    line-height: 1.5;
+    margin: 0; padding: 2rem; max-width: 860px; margin-inline: auto; line-height: 1.5;
   }
   h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
   p.sub { margin: 0 0 1.5rem; opacity: .7; }
@@ -109,4 +125,32 @@
   });
 </script>
 </body>
-</html>
+</html>"""
+
+
+async def index(request):
+    return HTMLResponse(PAGE)
+
+
+async def convert(request):
+    data = await request.body()
+    if not data:
+        return JSONResponse({"error": "Empty request body."}, status_code=400)
+    filename = request.headers.get("x-filename", "upload")
+    extension = os.path.splitext(filename)[1] or None
+    try:
+        result = _md.convert_stream(
+            io.BytesIO(data),
+            stream_info=StreamInfo(filename=filename, extension=extension),
+        )
+        return JSONResponse({"markdown": result.markdown, "title": result.title})
+    except Exception as exc:  # noqa: BLE001 - surface any conversion error
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+
+app = Starlette(
+    routes=[
+        Route("/", index, methods=["GET"]),
+        Route("/api/convert", convert, methods=["POST"]),
+    ]
+)

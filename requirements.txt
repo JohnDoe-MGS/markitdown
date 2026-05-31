@@ -1,5 +1,6 @@
-# Dependencies for the Vercel serverless function (api/convert.py).
-# Installs the local markitdown package with the common document formats.
-# Heavy/optional extras (audio, youtube, azure) are intentionally excluded
-# to stay within the serverless bundle size limit.
+# Dependencies for the Vercel Python (ASGI) app in app.py.
+# Installs the local markitdown package with common document formats.
+# Heavy/optional extras (audio, youtube, azure) are excluded to keep the
+# serverless bundle within size limits.
 ./packages/markitdown[pdf,docx,pptx,xlsx,outlook]
+starlette
