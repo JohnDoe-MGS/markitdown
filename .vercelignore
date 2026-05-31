@@ -1,0 +1,10 @@
+.venv/
+.claude/
+.git/
+**/__pycache__/
+**/*.pyc
+packages/markitdown/tests/
+packages/markitdown-mcp/
+packages/markitdown-ocr/
+packages/markitdown-sample-plugin/
+.devcontainer/

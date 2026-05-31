@@ -1,0 +1,5 @@
+# Dependencies for the Vercel serverless function (api/convert.py).
+# Installs the local markitdown package with the common document formats.
+# Heavy/optional extras (audio, youtube, azure) are intentionally excluded
+# to stay within the serverless bundle size limit.
+./packages/markitdown[pdf,docx,pptx,xlsx,outlook]
