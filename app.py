@@ -75,11 +75,13 @@ PAGE = """<!DOCTYPE html>
   h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
   p.sub { margin: 0 0 1.5rem; opacity: .7; }
   #drop {
-    border: 2px dashed #888; border-radius: 12px; padding: 2.25rem 1rem;
+    display: flex; flex-direction: column; align-items: center; gap: .7rem;
+    border: 2px dashed #b3b3b3; border-radius: 14px; padding: 2.25rem 1.25rem;
     text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
   }
   #drop.hover { border-color: #4f8cff; background: rgba(79,140,255,.08); }
   #drop input { display: none; }
+  #label { font-weight: 600; font-size: 1.05rem; }
   .muted { opacity: .65; font-size: .9rem; }
   .or { text-align: center; margin: 1rem 0 .5rem; opacity: .55; font-size: .85rem; }
   input[type=url] {
@@ -91,7 +93,7 @@ PAGE = """<!DOCTYPE html>
     background: #4f8cff; color: #fff; font-size: 1rem; cursor: pointer;
   }
   button:disabled { opacity: .5; cursor: default; }
-  .choose { display: inline-block; width: auto; margin: .75rem auto .25rem; }
+  .choose { width: auto; margin: 0; }
   textarea {
     width: 100%; min-height: 320px; margin-top: 1.25rem; padding: 1rem;
     border-radius: 10px; border: 1px solid #8884; font-family: ui-monospace, monospace;
