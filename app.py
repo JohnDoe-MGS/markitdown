@@ -107,7 +107,7 @@ PAGE = """<!DOCTYPE html>
   <label id="drop">
     <input type="file" id="file" />
     <div id="label">Click to choose a file — or drop one here</div>
-    <div class="muted">Direct upload up to ~4.5&nbsp;MB · PDF · DOCX · PPTX · XLSX · HTML · CSV · JSON · images …</div>
+    <div class="muted">Direct upload up to ~4.5&nbsp;MB · PDF · DOCX · PPTX · HTML · CSV · JSON · images …</div>
   </label>
 
   <div class="or">— or convert from a URL (no size limit) —</div>
@@ -115,6 +115,7 @@ PAGE = """<!DOCTYPE html>
 
   <div class="row">
     <button id="go" disabled>Convert</button>
+    <button id="download" disabled>Download .md</button>
     <button id="copy" disabled>Copy Markdown</button>
     <span id="status" class="muted"></span>
   </div>
@@ -129,12 +130,25 @@ PAGE = """<!DOCTYPE html>
   const label = document.getElementById('label');
   const go = document.getElementById('go');
   const copy = document.getElementById('copy');
+  const download = document.getElementById('download');
   const out = document.getElementById('out');
   const statusEl = document.getElementById('status');
   const errEl = document.getElementById('error');
   let current = null;
 
   function refresh() { go.disabled = !current && !urlInput.value.trim(); }
+
+  // Suggested .md file name, derived from the chosen file or URL.
+  function suggestedName() {
+    let base = '';
+    if (current) base = current.name;
+    else if (urlInput.value.trim()) {
+      try { base = decodeURIComponent(new URL(urlInput.value.trim()).pathname.split('/').pop() || ''); }
+      catch (e) { base = ''; }
+    }
+    base = (base || 'converted').replace(/\\.[^.]+$/, '');
+    return base + '.md';
+  }
   function pick(f) {
     current = f;
     label.textContent = f ? f.name : 'Click to choose a file — or drop one here';
@@ -152,7 +166,7 @@ PAGE = """<!DOCTYPE html>
   drop.addEventListener('drop', ev => { if (ev.dataTransfer.files[0]) pick(ev.dataTransfer.files[0]); });
 
   go.addEventListener('click', async () => {
-    errEl.textContent = ''; out.value = ''; copy.disabled = true;
+    errEl.textContent = ''; out.value = ''; copy.disabled = true; download.disabled = true;
     go.disabled = true; statusEl.textContent = 'Converting…';
     try {
       let res;
@@ -176,6 +190,7 @@ PAGE = """<!DOCTYPE html>
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
       out.value = data.markdown || '';
       copy.disabled = !out.value;
+      download.disabled = !out.value;
       statusEl.textContent = data.title ? ('Title: ' + data.title) : 'Done.';
     } catch (e) {
       errEl.textContent = 'Error: ' + e.message;
@@ -188,6 +203,35 @@ PAGE = """<!DOCTYPE html>
   copy.addEventListener('click', async () => {
     await navigator.clipboard.writeText(out.value);
     statusEl.textContent = 'Copied!';
+  });
+
+  download.addEventListener('click', async () => {
+    if (!out.value) return;
+    const name = suggestedName();
+    const blob = new Blob([out.value], { type: 'text/markdown;charset=utf-8' });
+    // Let the user choose where to save, when the browser supports it.
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        statusEl.textContent = 'Saved ' + name;
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // user cancelled
+        // otherwise fall through to a normal download
+      }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    statusEl.textContent = 'Downloaded ' + name;
   });
 </script>
 </body>
