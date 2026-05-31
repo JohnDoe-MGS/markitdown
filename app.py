@@ -91,6 +91,7 @@ PAGE = """<!DOCTYPE html>
     background: #4f8cff; color: #fff; font-size: 1rem; cursor: pointer;
   }
   button:disabled { opacity: .5; cursor: default; }
+  .choose { display: inline-block; width: auto; margin: .75rem auto .25rem; }
   textarea {
     width: 100%; min-height: 320px; margin-top: 1.25rem; padding: 1rem;
     border-radius: 10px; border: 1px solid #8884; font-family: ui-monospace, monospace;
@@ -106,7 +107,8 @@ PAGE = """<!DOCTYPE html>
 
   <label id="drop">
     <input type="file" id="file" />
-    <div id="label">Click to choose a file — or drop one here</div>
+    <div id="label">Drag a file here</div>
+    <button type="button" id="choose" class="choose">Choose file</button>
     <div class="muted">Direct upload up to ~4.5&nbsp;MB · PDF · DOCX · PPTX · HTML · CSV · JSON · images …</div>
   </label>
 
@@ -157,6 +159,11 @@ PAGE = """<!DOCTYPE html>
 
   fileInput.addEventListener('change', () => pick(fileInput.files[0]));
   urlInput.addEventListener('input', refresh);
+  // Explicit button: open the picker once (preventDefault stops the
+  // surrounding <label> from also triggering the file input).
+  document.getElementById('choose').addEventListener('click', (ev) => {
+    ev.preventDefault(); ev.stopPropagation(); fileInput.click();
+  });
   ['dragover', 'dragenter'].forEach(e => drop.addEventListener(e, ev => {
     ev.preventDefault(); drop.classList.add('hover');
   }));
